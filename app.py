@@ -304,7 +304,43 @@ if st.button("Find Safest Percentile"):
         st.success(f"Safest Percentile ≈ {round(safest_percentile,3)}")
 
         st.caption("Calculated using Round 1 and Round 2 closing ranks.")
+        # ---------------- BRANCH SAFETY ANALYZER ----------------
+
+st.markdown("---")
+st.markdown("## 🎯 Branch Wise Safest Percentile Analysis")
+
+jee_df = pd.read_excel("jee_cutoff.xlsx")
+
+branches = jee_df["Branch Name"].unique()
+
+results = []
+
+for _,row in jee_df.iterrows():
+
+    r1 = row["ROUND 1"]
+    r2 = row["ROUND 2"]
+
+    # safest rank = worse closing rank
+    safest_rank = max(r1,r2)
+
+    safest_percentile = 100 - (safest_rank/16000)
+
+    results.append({
+        "Branch":row["Branch Name"],
+        "Round 1 Rank":r1,
+        "Round 2 Rank":r2,
+        "Safest Rank":safest_rank,
+        "Safest Percentile":round(safest_percentile,3),
+        "Basis":"Calculated from Round 1 & Round 2 closing ranks"
+    })
+
+safety_df = pd.DataFrame(results)
+
+safety_df = safety_df.sort_values(by="Safest Percentile",ascending=False)
+
+st.dataframe(safety_df,use_container_width=True)
 # ---------------- FOOTER ----------------
 st.markdown("---")
 st.caption("Built with ❤️ by Anshul")
+
 
