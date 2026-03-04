@@ -32,37 +32,55 @@ if "user" not in st.session_state:
     login_tab, signup_tab = st.tabs(["Login","Signup"])
 
     # ---------------- LOGIN ----------------
-    with login_tab:
+   
+            with login_tab:
 
-        with st.form("login_form"):
+    with st.form("login_form"):
 
-            email = st.text_input("Email")
-            password = st.text_input("Password", type="password")
+        email = st.text_input("Email")
+        password = st.text_input("Password", type="password")
 
-            login_button = st.form_submit_button("Login")
+        login_button = st.form_submit_button("Login")
 
-            if login_button:
+        if login_button:
+
+            if email == "" or password == "":
+                st.warning("Enter email and password")
+
+            else:
 
                 try:
 
-                    user = auth.sign_in_with_email_and_password(email,password)
+                    # login attempt
+                    user = auth.sign_in_with_email_and_password(email, password)
 
+                    # small delay to stabilize response
+                    time.sleep(0.5)
+
+                    # check verification
                     account_info = auth.get_account_info(user['idToken'])
-
                     verified = account_info['users'][0]['emailVerified']
 
                     if verified:
-
                         st.session_state.user = user
                         st.rerun()
 
                     else:
-
                         st.error("Please verify your email before login 📧")
 
-                except:
+                except Exception as e:
 
-                    st.error("Invalid email or password")
+                    error = str(e)
+
+                    if "INVALID_PASSWORD" in error:
+                        st.error("Wrong password")
+
+                    elif "EMAIL_NOT_FOUND" in error:
+                        st.error("Email not registered")
+
+                    else:
+                        st.warning("Connection retry... click login again")
+                  
 
     # ---------------- SIGNUP ----------------
     with signup_tab:
@@ -282,3 +300,4 @@ if "result_df" in st.session_state:
 # ---------------- FOOTER ----------------
 st.markdown("---")
 st.caption("Built with ❤️ by Anshul | AI Cutoff Prediction Engine")
+
