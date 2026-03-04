@@ -31,7 +31,6 @@ if "user" not in st.session_state:
 
     login_tab, signup_tab = st.tabs(["Login","Signup"])
 
-    # LOGIN
     with login_tab:
 
         with st.form("login_form"):
@@ -79,7 +78,6 @@ if "user" not in st.session_state:
                         else:
                             st.warning("Connection retry — click login again")
 
-    # SIGNUP
     with signup_tab:
 
         with st.form("signup_form"):
@@ -119,8 +117,18 @@ st.markdown("""
 ### 🚀 Smart Round-wise Prediction + AI Counsellor
 """)
 
+# ---------------- MODE SELECT ----------------
+mode = st.radio(
+    "Select Admission Mode",
+    ["Boards Percentage", "JEE AIR"],
+    horizontal=True
+)
+
 # ---------------- LOAD DATA ----------------
-df = pd.read_excel("cutoff_data.xlsx")
+if mode == "Boards Percentage":
+    df = pd.read_excel("cutoff_data.xlsx")
+else:
+    df = pd.read_excel("jee_cutoff.xlsx")
 
 # ---------------- INPUT SECTION ----------------
 with st.container():
@@ -130,7 +138,11 @@ with st.container():
     col1,col2,col3 = st.columns(3)
 
     with col1:
-        percentage = st.number_input("🎯 Your Percentage",0.0,100.0)
+
+        if mode == "Boards Percentage":
+            score = st.number_input("🎯 Your Percentage",0.0,100.0)
+        else:
+            score = st.number_input("🎯 Your JEE AIR Rank",1,1000000)
 
     with col2:
         category = st.selectbox("📂 Category",df["Category"].unique())
@@ -161,7 +173,10 @@ if st.button("🚀 Predict Now"):
 
         safest=predicted+3
 
-        diff=percentage-current
+        if mode == "Boards Percentage":
+            diff = score-current
+        else:
+            diff = current-score
 
         if diff>=3:
             status="🟢 Safe"
@@ -260,7 +275,10 @@ if "result_df" in st.session_state:
 
             ai_df["Safest Score"]=ai_df["Predicted Cutoff"]+3
 
-            ai_df["Margin"]=percentage-ai_df["Safest Score"]
+            if mode == "Boards Percentage":
+                ai_df["Margin"]=score-ai_df["Safest Score"]
+            else:
+                ai_df["Margin"]=ai_df["Safest Score"]-score
 
             ai_df=ai_df.sort_values(by="Safest Score")
 
@@ -289,7 +307,7 @@ if "result_df" in st.session_state:
                 <div style="padding:20px;background-color:#1C1F26;border-radius:12px;">
                 <h3>Strategy Insight</h3>
                 <p>Best branch: <b>{best['Branch Name']}</b></p>
-                <p>Required safest score: <b>{round(best['Safest Score'],2)}%</b></p>
+                <p>Required safest score: <b>{round(best['Safest Score'],2)}</b></p>
                 </div>
                 """,unsafe_allow_html=True)
 
