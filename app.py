@@ -117,10 +117,25 @@ st.markdown("""
 ### 🚀 Smart Round-wise Prediction + AI Counsellor
 """)
 
+# ---------------- ANIMATED BUTTON STYLE ----------------
+st.markdown("""
+<style>
+.stRadio > div {
+    background: linear-gradient(90deg,#1f4fff,#00d4ff);
+    padding:10px;
+    border-radius:12px;
+}
+.stRadio label {
+    font-weight:600;
+    color:white;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # ---------------- MODE SELECT ----------------
 mode = st.radio(
     "Select Admission Mode",
-    ["Boards Percentage", "JEE AIR"],
+    ["Boards Percentage","JEE AIR 🚀"],
     horizontal=True
 )
 
@@ -130,15 +145,13 @@ if mode == "Boards Percentage":
 else:
     df = pd.read_excel("jee_cutoff.xlsx")
 
-
-            # ---------------- INPUT SECTION ----------------
+# ---------------- INPUT SECTION ----------------
 with st.container():
 
     st.markdown("## 🔍 Enter Your Details")
 
     col1,col2,col3 = st.columns(3)
 
-    # ---------- SCORE INPUT ----------
     with col1:
 
         if mode == "Boards Percentage":
@@ -147,7 +160,6 @@ with st.container():
         else:
             score = st.number_input("🎯 Your JEE AIR Rank",1,1000000)
 
-    # ---------- CATEGORY ----------
     if mode == "Boards Percentage":
 
         with col2:
@@ -159,7 +171,6 @@ with st.container():
 
         filtered_df = df
 
-    # ---------- ROUND ----------
     with col3:
         round_option = st.selectbox(
             "🗂 Select Round",
@@ -174,7 +185,7 @@ if st.button("🚀 Predict Now"):
     with st.spinner("Analyzing cutoffs..."):
         time.sleep(1)
 
-    filtered = df[df["Category"]==category]
+    filtered = filtered_df
 
     results=[]
 
@@ -231,100 +242,6 @@ if st.button("🚀 Predict Now"):
 
     st.dataframe(result_df,use_container_width=True)
 
-# ---------------- AI SECTION ----------------
-if "result_df" in st.session_state:
-
-    st.markdown("---")
-    st.markdown("## 🤖 AI Counsellor Recommendation")
-
-    colA,colB=st.columns(2)
-
-    with colA:
-        user_interest=st.selectbox(
-            "🎯 Your Primary Interest",
-            ["Coding","Core Engineering"]
-        )
-
-    with colB:
-        risk_level=st.selectbox(
-            "⚖ Risk Preference",
-            ["Safe Only","Balanced","Aggressive"]
-        )
-
-    if st.button("🧠 Generate AI Recommendation"):
-
-        ai_df=df[df["Category"]==category].copy()
-
-        if risk_level=="Safe Only":
-            selected_round="ROUND 1 CUTOFF"
-
-        elif risk_level=="Balanced":
-            selected_round="ROUND 2 CUTOFF"
-
-        else:
-            selected_round="SPOT"
-
-        if user_interest=="Coding":
-            keywords=["computer","ai","data","software","it"]
-
-        else:
-            keywords=["electronics","electrical","mechanical","civil","robotics","vlsi"]
-
-        ai_df=ai_df[
-            ai_df["Branch Name"].str.lower().apply(
-                lambda x:any(k in x for k in keywords)
-            )
-        ]
-
-        if ai_df.empty:
-
-            st.error("Branches not available for your interest.")
-
-        else:
-
-            ai_df["Predicted Cutoff"]=ai_df[selected_round]+(
-                ai_df[selected_round]*inflation/100
-            )
-
-            ai_df["Safest Score"]=ai_df["Predicted Cutoff"]+3
-
-            if mode == "Boards Percentage":
-                ai_df["Margin"]=score-ai_df["Safest Score"]
-            else:
-                ai_df["Margin"]=ai_df["Safest Score"]-score
-
-            ai_df=ai_df.sort_values(by="Safest Score")
-
-            ai_df=ai_df[ai_df["Margin"]>=-2]
-
-            if ai_df.empty:
-
-                st.warning("No branches match your strategy.")
-
-            else:
-
-                top=ai_df.head(3)
-
-                st.markdown("### 🏆 Top Recommended Branches")
-
-                st.dataframe(
-                    top[["Branch Name","Safest Score"]],
-                    use_container_width=True
-                )
-
-                best=top.iloc[0]
-
-                st.markdown("### 🧠 AI Recommendation")
-
-                st.markdown(f"""
-                <div style="padding:20px;background-color:#1C1F26;border-radius:12px;">
-                <h3>Strategy Insight</h3>
-                <p>Best branch: <b>{best['Branch Name']}</b></p>
-                <p>Required safest score: <b>{round(best['Safest Score'],2)}</b></p>
-                </div>
-                """,unsafe_allow_html=True)
-
 # ---------------- FOOTER ----------------
 st.markdown("---")
 st.caption("Built with ❤️ by Anshul")
-
