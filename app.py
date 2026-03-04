@@ -30,25 +30,24 @@ if "user" not in st.session_state:
     login_tab, signup_tab = st.tabs(["Login", "Signup"])
 
     # ---------- LOGIN TAB ----------
-    with login_tab:
+   with login_tab:
 
-        with st.form("login_form"):
+    with st.form("login_form"):
 
-            email = st.text_input("Email")
-            password = st.text_input("Password", type="password")
+        email = st.text_input("Email")
+        password = st.text_input("Password", type="password")
 
-            login_button = st.form_submit_button("Login")
+        login_button = st.form_submit_button("Login")
 
-            if login_button:
+        if login_button:
 
-                try:
-                    user = auth.sign_in_with_email_and_password(email, password)
-                    st.session_state.user = user
-                    st.success("Login Successful 🎉")
-                    st.rerun()
+            try:
+                user = auth.sign_in_with_email_and_password(email, password)
+                st.session_state.user = user
+                st.rerun()
 
-                except:
-                    st.error("Invalid Email or Password")
+            except:
+                st.error("Invalid Email or Password")
 
     # ---------- SIGNUP TAB ----------
     with signup_tab:
@@ -279,6 +278,7 @@ if "result_df" in st.session_state:
 
 st.markdown("---")
 st.caption("Built with ❤️ by Anshul | AI Cutoff Prediction Engine")
+
 
 
 
