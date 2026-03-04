@@ -130,23 +130,36 @@ if mode == "Boards Percentage":
 else:
     df = pd.read_excel("jee_cutoff.xlsx")
 
-# ---------------- INPUT SECTION ----------------
+
+            # ---------------- INPUT SECTION ----------------
 with st.container():
 
     st.markdown("## 🔍 Enter Your Details")
 
     col1,col2,col3 = st.columns(3)
 
+    # ---------- SCORE INPUT ----------
     with col1:
 
         if mode == "Boards Percentage":
             score = st.number_input("🎯 Your Percentage",0.0,100.0)
+
         else:
             score = st.number_input("🎯 Your JEE AIR Rank",1,1000000)
 
-    with col2:
-        category = st.selectbox("📂 Category",df["Category"].unique())
+    # ---------- CATEGORY ----------
+    if mode == "Boards Percentage":
 
+        with col2:
+            category = st.selectbox("📂 Category",df["Category"].unique())
+
+        filtered_df = df[df["Category"] == category]
+
+    else:
+
+        filtered_df = df
+
+    # ---------- ROUND ----------
     with col3:
         round_option = st.selectbox(
             "🗂 Select Round",
@@ -314,3 +327,4 @@ if "result_df" in st.session_state:
 # ---------------- FOOTER ----------------
 st.markdown("---")
 st.caption("Built with ❤️ by Anshul")
+
