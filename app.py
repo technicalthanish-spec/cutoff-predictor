@@ -34,30 +34,33 @@ if "user" not in st.session_state:
 
     with login_tab:
 
-        email = st.text_input("Email", key="login_email")
-        password = st.text_input("Password", type="password", key="login_pass")
+    with st.form("login_form"):
 
-        if st.button("Login"):
+        email = st.text_input("Email")
+        password = st.text_input("Password", type="password")
 
-            if email == "" or password == "":
-                st.warning("Please enter email and password")
+        login_button = st.form_submit_button("Login")
 
-            else:
-                try:
-                    user = auth.sign_in_with_email_and_password(email, password)
-                    st.session_state.user = user
-                    st.success("Login Successful 🎉")
-                    st.rerun()
+        if login_button:
 
-                except:
-                    st.error("Invalid Email or Password")
+            try:
+                user = auth.sign_in_with_email_and_password(email, password)
+                st.session_state.user = user
+                st.success("Login Successful 🎉")
+                st.rerun()
 
-    with signup_tab:
+            except:
+                st.error("Invalid Email or Password")
+with signup_tab:
 
-        new_email = st.text_input("Email", key="signup_email")
-        new_password = st.text_input("Password", type="password", key="signup_pass")
+    with st.form("signup_form"):
 
-        if st.button("Create Account"):
+        new_email = st.text_input("Email")
+        new_password = st.text_input("Password", type="password")
+
+        signup_button = st.form_submit_button("Create Account")
+
+        if signup_button:
 
             try:
                 auth.create_user_with_email_and_password(new_email, new_password)
@@ -65,8 +68,6 @@ if "user" not in st.session_state:
 
             except:
                 st.error("Signup Failed")
-
-    st.stop()
 
 # ---------------- LOGOUT BUTTON ----------------
 
@@ -276,4 +277,5 @@ if "result_df" in st.session_state:
 
 st.markdown("---")
 st.caption("Built with ❤️ by Anshul | AI Cutoff Prediction Engine")
+
 
