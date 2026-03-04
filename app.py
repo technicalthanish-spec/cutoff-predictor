@@ -37,6 +37,7 @@ firebaseConfig = {
 "storageBucket":"cutoff-predictor.firebasestorage.app",
 "messagingSenderId":"694561033415",
 "appId":"1:694561033415:web:0012224da667a1b7f542e2"
+    "databaseURL":""
 }
 
 firebase=pyrebase.initialize_app(firebaseConfig)
@@ -271,3 +272,4 @@ with tab3:
 # ---------------- FOOTER ----------------
 st.markdown("---")
 st.caption("Built with ❤️ by Anshul")
+
