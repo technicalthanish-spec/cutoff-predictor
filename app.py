@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import time
 import pyrebase
-st.cache_data.clear()
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
@@ -10,6 +9,29 @@ st.set_page_config(
     page_icon="🎓",
     layout="wide"
 )
+
+# ---------------- UI STYLE ----------------
+st.markdown("""
+<style>
+
+.main-title {
+font-size:40px;
+font-weight:700;
+text-align:center;
+background: linear-gradient(90deg,#3a7bd5,#00d2ff);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+}
+
+.login-box {
+padding:25px;
+border-radius:12px;
+background-color:#111111;
+box-shadow:0px 0px 20px rgba(0,0,0,0.3);
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 # ---------------- FIREBASE CONFIG ----------------
 firebaseConfig = {
@@ -28,44 +50,51 @@ auth = firebase.auth()
 # ---------------- LOGIN SYSTEM ----------------
 if "user" not in st.session_state:
 
-    st.title("🔐 Login to Cutoff Predictor")
+    st.markdown("<h1 class='main-title'>🎓 Cutoff Predictor Pro</h1>", unsafe_allow_html=True)
 
-    login_tab, signup_tab = st.tabs(["Login", "Signup"])
+    st.info("Login to continue")
+
+    login_tab, signup_tab = st.tabs(["Login","Signup"])
 
     # -------- LOGIN --------
-   with login_tab:
+    with login_tab:
 
-    with st.form("login_form"):
+        with st.form("login_form"):
 
-        email = st.text_input("Email")
-        password = st.text_input("Password", type="password")
+            email = st.text_input("Email")
+            password = st.text_input("Password", type="password")
 
-        login_button = st.form_submit_button("Login")
+            login_btn = st.form_submit_button("Login")
 
-        if login_button:
+            if login_btn:
 
-            if email == "" or password == "":
-                st.warning("Enter email and password")
+                if email == "" or password == "":
+                    st.warning("Enter email and password")
 
-            else:
-                try:
-                    user = auth.sign_in_with_email_and_password(email, password)
+                else:
+                    with st.spinner("Authenticating..."):
+                        time.sleep(0.7)
 
-                    if user:
-                        st.session_state.user = user
-                        st.rerun()
+                        try:
 
-                except Exception as e:
-                    error_message = str(e)
+                            user = auth.sign_in_with_email_and_password(email,password)
 
-                    if "INVALID_PASSWORD" in error_message:
-                        st.error("Wrong password")
+                            if user:
+                                st.session_state.user = user
+                                st.rerun()
 
-                    elif "EMAIL_NOT_FOUND" in error_message:
-                        st.error("Email not registered")
+                        except Exception as e:
 
-                    else:
-                        st.error("Login failed. Try again.")
+                            error = str(e)
+
+                            if "EMAIL_NOT_FOUND" in error:
+                                st.error("Email not registered")
+
+                            elif "INVALID_PASSWORD" in error:
+                                st.error("Wrong password")
+
+                            else:
+                                st.error("Login failed. Try again.")
 
     # -------- SIGNUP --------
     with signup_tab:
@@ -75,21 +104,31 @@ if "user" not in st.session_state:
             new_email = st.text_input("Email")
             new_password = st.text_input("Password", type="password")
 
-            signup_button = st.form_submit_button("Create Account")
+            signup_btn = st.form_submit_button("Create Account")
 
-            if signup_button:
+            if signup_btn:
 
-                try:
-                    auth.create_user_with_email_and_password(new_email, new_password)
-                    st.success("Account Created Successfully 🎉")
+                if new_email == "" or new_password == "":
+                    st.warning("Enter email & password")
 
-                except:
-                    st.error("Signup Failed")
+                else:
+
+                    with st.spinner("Creating account..."):
+                        time.sleep(0.7)
+
+                        try:
+
+                            auth.create_user_with_email_and_password(new_email,new_password)
+
+                            st.success("Account created successfully 🎉")
+
+                        except:
+                            st.error("Signup failed")
 
     st.stop()
 
 # ---------------- LOGOUT ----------------
-col1, col2 = st.columns([9,1])
+col1,col2 = st.columns([9,1])
 
 with col2:
     if st.button("Logout"):
@@ -97,204 +136,90 @@ with col2:
         st.rerun()
 
 # ---------------- HEADER ----------------
-st.markdown("""
-# 🎓 Cutoff Predictor Pro  
-### 🚀 Smart Round-wise Prediction + AI Counsellor Engine
-""")
+st.markdown("<h1 class='main-title'>🎓 Cutoff Predictor Pro</h1>", unsafe_allow_html=True)
 
-st.success("Welcome to Cutoff Predictor 🎓")
+st.success("Welcome! Login successful 🎉")
 
 # ---------------- LOAD DATA ----------------
 df = pd.read_excel("cutoff_data.xlsx")
 
 # ---------------- INPUT SECTION ----------------
-with st.container():
+st.markdown("## 🔍 Enter Your Details")
 
-    st.markdown("## 🔍 Enter Your Details")
+c1,c2,c3 = st.columns(3)
 
-    col1, col2, col3 = st.columns(3)
+with c1:
+    percentage = st.number_input("🎯 Your Percentage",0.0,100.0)
 
-    with col1:
-        percentage = st.number_input(
-            "🎯 Your Percentage",
-            min_value=0.0,
-            max_value=100.0
-        )
+with c2:
+    category = st.selectbox("📂 Category",df["Category"].unique())
 
-    with col2:
-        category = st.selectbox(
-            "📂 Category",
-            df["Category"].unique()
-        )
-
-    with col3:
-        round_option = st.selectbox(
-            "🗂 Select Round (Base View)",
-            ["ROUND 1 CUTOFF","ROUND 2 CUTOFF","ROUND 3 CUTOFF","SPOT"]
-        )
-
-    inflation = st.slider(
-        "📈 Expected Next Year Inflation (%)",
-        0.0,5.0,2.0
+with c3:
+    round_option = st.selectbox(
+        "🗂 Select Round",
+        ["ROUND 1 CUTOFF","ROUND 2 CUTOFF","ROUND 3 CUTOFF","SPOT"]
     )
+
+inflation = st.slider("📈 Expected Next Year Inflation (%)",0.0,5.0,2.0)
 
 # ---------------- PREDICTION ----------------
 if st.button("🚀 Predict Now"):
 
-    with st.spinner("🔍 Analyzing cutoffs..."):
+    with st.spinner("Analyzing cutoffs..."):
         time.sleep(1)
 
-    progress = st.progress(0)
+    filtered = df[df["Category"]==category]
 
-    for i in range(100):
-        time.sleep(0.01)
-        progress.progress(i+1)
+    results=[]
 
-    progress.empty()
+    for _,row in filtered.iterrows():
 
-    filtered = df[df["Category"] == category]
+        current=row[round_option]
+        predicted=current+(current*inflation/100)
+        safest=predicted+3
 
-    results = []
+        diff=percentage-current
 
-    for _, row in filtered.iterrows():
-
-        current_cutoff = row[round_option]
-        predicted_cutoff = current_cutoff + (
-            current_cutoff * inflation / 100
-        )
-
-        safest_score = predicted_cutoff + 3
-
-        difference = percentage - current_cutoff
-
-        if difference >= 3:
-            status = "🟢 Safe"
-        elif difference >= 0:
-            status = "🟡 Borderline"
-        elif difference >= -2:
-            status = "🔴 Risky"
+        if diff>=3:
+            status="🟢 Safe"
+        elif diff>=0:
+            status="🟡 Borderline"
+        elif diff>=-2:
+            status="🔴 Risky"
         else:
-            status = "❌ Not Eligible"
+            status="❌ Not Eligible"
 
         results.append({
-            "Program": row["Program"],
-            "Branch Name": row["Branch Name"],
-            "Current Cutoff": current_cutoff,
-            "Predicted Next Year Cutoff": round(predicted_cutoff,2),
-            "Safest Score Next Year": round(safest_score,2),
-            "Your Status": status
+            "Program":row["Program"],
+            "Branch":row["Branch Name"],
+            "Current Cutoff":current,
+            "Predicted Cutoff":round(predicted,2),
+            "Safest Score":round(safest,2),
+            "Status":status
         })
 
-    result_df = pd.DataFrame(results)
-    result_df = result_df.sort_values(
-        by="Safest Score Next Year"
-    )
+    result_df=pd.DataFrame(results)
+    result_df=result_df.sort_values(by="Safest Score")
 
-    st.session_state["result_df"] = result_df
+    st.session_state["result_df"]=result_df
 
-    # -------- SUMMARY --------
-    safe_count = len(
-        result_df[result_df["Your Status"]=="🟢 Safe"]
-    )
+    # SUMMARY
+    safe=len(result_df[result_df["Status"]=="🟢 Safe"])
+    borderline=len(result_df[result_df["Status"]=="🟡 Borderline"])
+    risky=len(result_df[result_df["Status"]=="🔴 Risky"])
 
-    borderline_count = len(
-        result_df[result_df["Your Status"]=="🟡 Borderline"]
-    )
+    st.markdown("## 📊 Summary")
 
-    risky_count = len(
-        result_df[result_df["Your Status"]=="🔴 Risky"]
-    )
+    a,b,c=st.columns(3)
 
-    st.markdown("## 📊 Performance Summary")
+    a.metric("Safe",safe)
+    b.metric("Borderline",borderline)
+    c.metric("Risky",risky)
 
-    c1,c2,c3 = st.columns(3)
-
-    c1.metric("🟢 Safe Options",safe_count)
-    c2.metric("🟡 Borderline",borderline_count)
-    c3.metric("🔴 Risky",risky_count)
-
-    st.markdown("## 📋 Detailed Results")
+    st.markdown("## 📋 Results")
 
     st.dataframe(result_df,use_container_width=True)
 
-# ---------------- AI SECTION ----------------
-if "result_df" in st.session_state:
-
-    st.markdown("---")
-    st.markdown("## 🤖 AI Counsellor Recommendation")
-
-    colA,colB = st.columns(2)
-
-    with colA:
-        user_interest = st.selectbox(
-            "🎯 Your Primary Interest",
-            ["Coding","Core Engineering"]
-        )
-
-    with colB:
-        risk_level = st.selectbox(
-            "⚖ Risk Preference",
-            ["Safe Only","Balanced","Aggressive"]
-        )
-
-    if st.button("🧠 Generate AI Recommendation"):
-
-        ai_df = df[df["Category"] == category].copy()
-
-        if risk_level=="Safe Only":
-            selected_round="ROUND 1 CUTOFF"
-
-        elif risk_level=="Balanced":
-            selected_round="ROUND 2 CUTOFF"
-
-        else:
-            selected_round="SPOT"
-
-        if user_interest=="Coding":
-            keywords=["computer","ai","data","software","it"]
-
-        else:
-            keywords=[
-                "electronics",
-                "electrical",
-                "mechanical",
-                "civil",
-                "robotics",
-                "vlsi"
-            ]
-
-        ai_df = ai_df[
-            ai_df["Branch Name"].str.lower().apply(
-                lambda x:any(k in x for k in keywords)
-            )
-        ]
-
-        if ai_df.empty:
-
-            st.error(
-                "Branches not available for your interest."
-            )
-
-        else:
-
-            ai_df["Predicted Cutoff"] = ai_df[selected_round] + (
-                ai_df[selected_round] * inflation / 100
-            )
-
-            ai_df["Safest Score"] = ai_df["Predicted Cutoff"] + 3
-
-            ai_df = ai_df.sort_values(by="Safest Score")
-
-            top = ai_df.head(3)
-
-            st.markdown("### 🏆 Top Recommended Branches")
-
-            st.dataframe(
-                top[["Branch Name","Safest Score"]],
-                use_container_width=True
-            )
-
 # ---------------- FOOTER ----------------
 st.markdown("---")
-st.caption("Built with ❤️ by Anshul | AI Cutoff Prediction Engine")
-
+st.caption("Built with ❤️ by Anshul")
