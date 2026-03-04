@@ -260,7 +260,51 @@ with colB:
         percentile_calc = 100 - (rank_input / 16000)
 
         st.success(f"Expected Percentile: {round(percentile_calc,3)}")
+# ---------------- SAFEST PERCENTILE FINDER ----------------
 
+st.markdown("---")
+st.markdown("## 🎯 Safest Percentile for Preferred Branch Type")
+
+preference = st.selectbox(
+    "Select Your Preferred Field",
+    ["Coding Branches","Electrical / Core Branches"]
+)
+
+if st.button("Find Safest Percentile"):
+
+    jee_df = pd.read_excel("jee_cutoff.xlsx")
+
+    if preference == "Coding Branches":
+
+        keywords = ["computer","ai","software","data","it"]
+
+    else:
+
+        keywords = ["electrical","electronics","robotics","vlsi"]
+
+    filtered = jee_df[
+        jee_df["Branch Name"].str.lower().apply(
+            lambda x: any(k in x for k in keywords)
+        )
+    ]
+
+    if filtered.empty:
+
+        st.warning("No branches matched.")
+
+    else:
+
+        r1 = filtered["ROUND 1"].max()
+        r2 = filtered["ROUND 2"].max()
+
+        safest_rank = max(r1,r2)
+
+        safest_percentile = 100 - (safest_rank / 16000)
+
+        st.success(f"Safest Percentile ≈ {round(safest_percentile,3)}")
+
+        st.caption("Calculated using Round 1 and Round 2 closing ranks.")
 # ---------------- FOOTER ----------------
 st.markdown("---")
 st.caption("Built with ❤️ by Anshul")
+
