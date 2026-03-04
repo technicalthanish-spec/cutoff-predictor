@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import pyrebase
 import time
-import plotly.express as px
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
@@ -78,7 +77,7 @@ tab1,tab2,tab3=st.tabs([
 ])
 
 # =====================================================
-# 🎯 PREDICTOR TAB
+# 🎯 PREDICTOR
 # =====================================================
 
 with tab1:
@@ -174,17 +173,8 @@ with tab1:
 
         st.dataframe(result_df,use_container_width=True)
 
-        fig=px.bar(
-            result_df,
-            x="Branch",
-            y="Current Cutoff",
-            title="Branch Cutoff Comparison"
-        )
-
-        st.plotly_chart(fig,use_container_width=True)
-
 # =====================================================
-# 📊 RANK TOOL TAB
+# 📊 RANK ↔ PERCENTILE
 # =====================================================
 
 with tab2:
@@ -216,7 +206,7 @@ with tab2:
             st.success(f"Expected Percentile ≈ {round(percentile,3)}")
 
 # =====================================================
-# 🧠 BRANCH ANALYZER TAB
+# 🧠 BRANCH ANALYZER
 # =====================================================
 
 with tab3:
