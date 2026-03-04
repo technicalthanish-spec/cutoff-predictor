@@ -1,6 +1,21 @@
 import streamlit as st
 import pandas as pd
 import time
+import pyrebase
+
+# ---------------- FIREBASE CONFIG ----------------
+firebaseConfig = {
+    "apiKey": "AIzaSyA6enUAvvHTKj_A-525fXzBnXhgckiPO2c",
+    "authDomain": "cutoff-predictor.firebaseapp.com",
+    "projectId": "cutoff-predictor",
+    "storageBucket": "cutoff-predictor.firebasestorage.app",
+    "messagingSenderId": "694561033415",
+    "appId": "1:694561033415:web:0012224da667a1b7f542e2",
+    "databaseURL": ""
+}
+
+firebase = pyrebase.initialize_app(firebaseConfig)
+auth = firebase.auth()
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
@@ -8,6 +23,48 @@ st.set_page_config(
     page_icon="🎓",
     layout="wide"
 )
+
+# ---------------- LOGIN SYSTEM ----------------
+
+if "user" not in st.session_state:
+
+    st.title("🔐 Login to Cutoff Predictor")
+
+    email = st.text_input("Email")
+    password = st.text_input("Password", type="password")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("Login"):
+            try:
+                user = auth.sign_in_with_email_and_password(email, password)
+                st.session_state.user = user
+                st.success("Login Successful 🎉")
+                st.rerun()
+            except:
+                st.error("Invalid Email or Password")
+
+    with col2:
+        if st.button("Signup"):
+            try:
+                auth.create_user_with_email_and_password(email, password)
+                st.success("Account Created Successfully")
+            except:
+                st.error("Signup Failed")
+
+    st.stop()
+
+# ---------------- LOGOUT BUTTON ----------------
+
+colx, coly = st.columns([8,1])
+
+with coly:
+    if st.button("Logout"):
+        del st.session_state.user
+        st.rerun()
+
+# ---------------- HEADER ----------------
 
 st.markdown("""
 # 🎓 Cutoff Predictor Pro  
@@ -18,7 +75,9 @@ st.markdown("""
 df = pd.read_excel("cutoff_data.xlsx")
 
 # ---------------- INPUT SECTION ----------------
+
 with st.container():
+
     st.markdown("## 🔍 Enter Your Details")
 
     col1, col2, col3 = st.columns(3)
@@ -38,18 +97,22 @@ with st.container():
     inflation = st.slider("📈 Expected Next Year Inflation (%)", 0.0, 5.0, 2.0)
 
 # ---------------- PREDICTION ----------------
+
 if st.button("🚀 Predict Now"):
 
     with st.spinner("🔍 Analyzing cutoffs and forecasting next year trends..."):
         time.sleep(1.2)
 
     progress = st.progress(0)
+
     for i in range(100):
         time.sleep(0.01)
         progress.progress(i + 1)
+
     progress.empty()
 
     filtered = df[df["Category"] == category]
+
     results = []
 
     for _, row in filtered.iterrows():
@@ -83,7 +146,8 @@ if st.button("🚀 Predict Now"):
 
     st.session_state["result_df"] = result_df
 
-    # -------- SUMMARY --------
+# ---------------- SUMMARY ----------------
+
     safe_count = len(result_df[result_df["Your Status"] == "🟢 Safe"])
     borderline_count = len(result_df[result_df["Your Status"] == "🟡 Borderline"])
     risky_count = len(result_df[result_df["Your Status"] == "🔴 Risky"])
@@ -92,23 +156,18 @@ if st.button("🚀 Predict Now"):
 
     col1, col2, col3 = st.columns(3)
 
-    with col1:
-        st.metric("🟢 Safe Options", safe_count)
-        time.sleep(0.2)
-
-    with col2:
-        st.metric("🟡 Borderline Options", borderline_count)
-        time.sleep(0.2)
-
-    with col3:
-        st.metric("🔴 Risky Options", risky_count)
+    col1.metric("🟢 Safe Options", safe_count)
+    col2.metric("🟡 Borderline Options", borderline_count)
+    col3.metric("🔴 Risky Options", risky_count)
 
     st.success("✅ Prediction Complete! Scroll down for AI insights.")
 
     st.markdown("## 📋 Detailed Results")
+
     st.dataframe(result_df, use_container_width=True)
 
 # ---------------- AI SECTION ----------------
+
 if "result_df" in st.session_state:
 
     st.markdown("---")
@@ -135,7 +194,6 @@ if "result_df" in st.session_state:
 
         ai_df = df[df["Category"] == category].copy()
 
-        # -------- Risk Based Round Selection --------
         if risk_level == "Safe Only":
             selected_round = "ROUND 1 CUTOFF"
         elif risk_level == "Balanced":
@@ -143,18 +201,10 @@ if "result_df" in st.session_state:
         else:
             selected_round = "SPOT"
 
-        # -------- Interest Filtering --------
         if user_interest == "Coding":
-            keywords = ["computer", "ai", "data", "software", "it"]
+            keywords = ["computer","ai","data","software","it"]
         else:
-            keywords = [
-                "electronics",
-                "electrical",
-                "mechanical",
-                "civil",
-                "robotics",
-                "vlsi"
-            ]
+            keywords = ["electronics","electrical","mechanical","civil","robotics","vlsi"]
 
         ai_df = ai_df[
             ai_df["Branch Name"].str.lower().apply(
@@ -163,9 +213,9 @@ if "result_df" in st.session_state:
         ]
 
         if ai_df.empty:
-            st.error(
-                f"{user_interest} branches are not available at your current level."
-            )
+
+            st.error("No branches available for your interest.")
+
         else:
 
             ai_df["Predicted Cutoff"] = ai_df[selected_round] + (
@@ -179,19 +229,19 @@ if "result_df" in st.session_state:
             ai_df = ai_df[ai_df["Margin"] >= -2]
 
             if ai_df.empty:
-                st.warning(
-                    "No branches match your interest and risk strategy."
-                )
+
+                st.warning("No branches match your risk strategy.")
+
             else:
 
                 top_recommendations = ai_df.head(3)
 
                 st.markdown("### 🏆 Top Recommended Branches")
+
                 st.dataframe(
-                    top_recommendations[[
-                        "Branch Name",
-                        "Safest Score"
-                    ]],
+                    top_recommendations[
+                        ["Branch Name","Safest Score"]
+                    ],
                     use_container_width=True
                 )
 
@@ -200,9 +250,7 @@ if "result_df" in st.session_state:
                 st.markdown("### 🧠 AI Recommendation")
 
                 st.markdown(f"""
-                <div style="padding:20px;
-                background-color:#1C1F26;
-                border-radius:12px;">
+                <div style="padding:20px;background-color:#1C1F26;border-radius:12px;">
                 <h3>🎯 Strategy Insight</h3>
                 <p>You selected <b>{risk_level}</b> strategy.</p>
                 <p>Prediction uses <b>{selected_round}</b> cutoff + inflation.</p>
@@ -212,5 +260,6 @@ if "result_df" in st.session_state:
                 """, unsafe_allow_html=True)
 
 # ---------------- FOOTER ----------------
+
 st.markdown("---")
 st.caption("Built with ❤️ by Anshul | AI Cutoff Prediction Engine")
