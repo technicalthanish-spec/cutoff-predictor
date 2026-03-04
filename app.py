@@ -5,7 +5,7 @@ import pyrebase
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
-    page_title="Cutoff Predictor Pro",
+    page_title="Jaypee Noida Cutoff Predictor",
     page_icon="🎓",
     layout="wide"
 )
@@ -27,62 +27,59 @@ auth = firebase.auth()
 # ---------------- LOGIN SYSTEM ----------------
 if "user" not in st.session_state:
 
-    st.title("🔐 Login to Cutoff Predictor")
+    st.title("🔐 Jaypee Noida Cutoff Login")
 
     login_tab, signup_tab = st.tabs(["Login","Signup"])
 
-    # ---------------- LOGIN ----------------
-   
-            with login_tab:
+    # LOGIN
+    with login_tab:
 
-    with st.form("login_form"):
+        with st.form("login_form"):
 
-        email = st.text_input("Email")
-        password = st.text_input("Password", type="password")
+            email = st.text_input("Email")
+            password = st.text_input("Password", type="password")
 
-        login_button = st.form_submit_button("Login")
+            login_button = st.form_submit_button("Login")
 
-        if login_button:
+            if login_button:
 
-            if email == "" or password == "":
-                st.warning("Enter email and password")
+                if email == "" or password == "":
+                    st.warning("Enter email and password")
 
-            else:
+                else:
+                    try:
 
-                try:
+                        user = auth.sign_in_with_email_and_password(email,password)
 
-                    # login attempt
-                    user = auth.sign_in_with_email_and_password(email, password)
+                        time.sleep(0.4)
 
-                    # small delay to stabilize response
-                    time.sleep(0.5)
+                        account_info = auth.get_account_info(user['idToken'])
 
-                    # check verification
-                    account_info = auth.get_account_info(user['idToken'])
-                    verified = account_info['users'][0]['emailVerified']
+                        verified = account_info['users'][0]['emailVerified']
 
-                    if verified:
-                        st.session_state.user = user
-                        st.rerun()
+                        if verified:
 
-                    else:
-                        st.error("Please verify your email before login 📧")
+                            st.session_state.user = user
+                            st.rerun()
 
-                except Exception as e:
+                        else:
 
-                    error = str(e)
+                            st.error("Please verify your email before login 📧")
 
-                    if "INVALID_PASSWORD" in error:
-                        st.error("Wrong password")
+                    except Exception as e:
 
-                    elif "EMAIL_NOT_FOUND" in error:
-                        st.error("Email not registered")
+                        error=str(e)
 
-                    else:
-                        st.warning("Connection retry... click login again")
-                  
+                        if "INVALID_PASSWORD" in error:
+                            st.error("Wrong password")
 
-    # ---------------- SIGNUP ----------------
+                        elif "EMAIL_NOT_FOUND" in error:
+                            st.error("Email not registered")
+
+                        else:
+                            st.warning("Connection retry — click login again")
+
+    # SIGNUP
     with signup_tab:
 
         with st.form("signup_form"):
@@ -118,8 +115,8 @@ with col2:
 
 # ---------------- HEADER ----------------
 st.markdown("""
-# 🎓 Cutoff Predictor Pro  
-### 🚀 Smart Round-wise Prediction + AI Counsellor Engine
+# 🎓 Jaypee Noida Cutoff Predictor  
+### 🚀 Smart Round-wise Prediction + AI Counsellor
 """)
 
 # ---------------- LOAD DATA ----------------
@@ -130,13 +127,13 @@ with st.container():
 
     st.markdown("## 🔍 Enter Your Details")
 
-    col1, col2, col3 = st.columns(3)
+    col1,col2,col3 = st.columns(3)
 
     with col1:
-        percentage = st.number_input("🎯 Your Percentage", min_value=0.0, max_value=100.0)
+        percentage = st.number_input("🎯 Your Percentage",0.0,100.0)
 
     with col2:
-        category = st.selectbox("📂 Category", df["Category"].unique())
+        category = st.selectbox("📂 Category",df["Category"].unique())
 
     with col3:
         round_option = st.selectbox(
@@ -144,7 +141,7 @@ with st.container():
             ["ROUND 1 CUTOFF","ROUND 2 CUTOFF","ROUND 3 CUTOFF","SPOT"]
         )
 
-    inflation = st.slider("📈 Expected Next Year Inflation (%)",0.0,5.0,2.0)
+    inflation = st.slider("📈 Expected Inflation (%)",0.0,5.0,2.0)
 
 # ---------------- PREDICTION ----------------
 if st.button("🚀 Predict Now"):
@@ -271,7 +268,7 @@ if "result_df" in st.session_state:
 
             if ai_df.empty:
 
-                st.warning("No branches match your risk strategy.")
+                st.warning("No branches match your strategy.")
 
             else:
 
@@ -291,7 +288,6 @@ if "result_df" in st.session_state:
                 st.markdown(f"""
                 <div style="padding:20px;background-color:#1C1F26;border-radius:12px;">
                 <h3>Strategy Insight</h3>
-                <p>You selected <b>{risk_level}</b></p>
                 <p>Best branch: <b>{best['Branch Name']}</b></p>
                 <p>Required safest score: <b>{round(best['Safest Score'],2)}%</b></p>
                 </div>
@@ -299,5 +295,4 @@ if "result_df" in st.session_state:
 
 # ---------------- FOOTER ----------------
 st.markdown("---")
-st.caption("Built with ❤️ by Anshul | AI Cutoff Prediction Engine")
-
+st.caption("Built with ❤️ by Anshul")
