@@ -81,7 +81,17 @@ if "user" not in st.session_state:
             if signup_button:
 
                 try:
-                    auth.create_user_with_email_and_password(new_email,new_password)
+                    try:
+
+    user = auth.create_user_with_email_and_password(new_email,new_password)
+
+    # verification email send
+    auth.send_email_verification(user['idToken'])
+
+    st.success("Account created! Check your email to verify 📧")
+
+except:
+    st.error("Signup Failed")
                     st.success("Account Created Successfully 🎉")
 
                 except:
@@ -306,5 +316,6 @@ if "result_df" in st.session_state:
 # ---------------- FOOTER ----------------
 st.markdown("---")
 st.caption("Built with ❤️ by Anshul | AI Cutoff Prediction Engine")
+
 
 
