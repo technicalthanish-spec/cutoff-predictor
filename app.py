@@ -191,7 +191,23 @@ if st.button("🚀 Predict Now"):
 
     for _,row in filtered.iterrows():
 
-        current=row[round_option]
+        if mode == "JEE AIR 🚀":
+    
+    if round_option == "ROUND 1 CUTOFF":
+        current = row["ROUND 1"]
+
+    elif round_option == "ROUND 2 CUTOFF":
+        current = row["ROUND 2"]
+
+    elif round_option == "ROUND 3 CUTOFF":
+        current = row["ROUND 2 UPGRADATION"]
+
+    else:
+        current = row["SPOT"]
+
+else:
+
+    current = row[round_option]
 
         predicted=current+(current*inflation/100)
 
@@ -245,3 +261,4 @@ if st.button("🚀 Predict Now"):
 # ---------------- FOOTER ----------------
 st.markdown("---")
 st.caption("Built with ❤️ by Anshul")
+
