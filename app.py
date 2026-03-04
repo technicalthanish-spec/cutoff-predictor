@@ -9,7 +9,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# ---------------- HERO ----------------
+# ---------------- HERO UI ----------------
 st.markdown("""
 <style>
 .hero {
@@ -134,18 +134,51 @@ with tab1:
 
             current = row[round_option]
 
-            predicted = current + (current*inflation/100)
+            predicted = current + (current * inflation / 100)
 
             safest = predicted + 3
 
-            if mode == "Boards Percentage":
-                diff = score - current
-                prob = (score/current)*100 if current>0 else 0
-            else:
-                diff = current - score
-                prob = (current/score)*100 if score>0 else 0
+            # -------- Probability Logic --------
 
-            prob = max(0,min(prob,100))
+            if mode == "Boards Percentage":
+
+                margin = score - current
+
+                if margin >= 5:
+                    prob = 95
+                elif margin >= 3:
+                    prob = 80
+                elif margin >= 1:
+                    prob = 60
+                elif margin >= 0:
+                    prob = 45
+                elif margin >= -1:
+                    prob = 30
+                else:
+                    prob = 10
+
+                diff = margin
+
+            else:
+
+                margin = current - score
+
+                if margin >= 20000:
+                    prob = 95
+                elif margin >= 10000:
+                    prob = 80
+                elif margin >= 5000:
+                    prob = 60
+                elif margin >= 0:
+                    prob = 45
+                elif margin >= -5000:
+                    prob = 25
+                else:
+                    prob = 10
+
+                diff = margin
+
+            # -------- Status --------
 
             if diff >= 3:
                 status = "🟢 Safe"
@@ -161,7 +194,7 @@ with tab1:
                 "Current Cutoff":current,
                 "Predicted":round(predicted,2),
                 "Safest":round(safest,2),
-                "Chance %":round(prob,1),
+                "Chance %":prob,
                 "Status":status
             })
 
@@ -185,7 +218,7 @@ with tab1:
 
             st.write(f"**{row['Branch']}** — {row['Chance %']}% chance")
 
-            st.progress(int(row["Chance %"]))
+            st.progress(row["Chance %"])
 
 # =====================================================
 # 📊 RANK ↔ PERCENTILE
@@ -203,7 +236,7 @@ with tab2:
 
         if st.button("Calculate Rank"):
 
-            rank = (100-p)*16000
+            rank = (100 - p) * 16000
 
             st.success(f"Expected Rank ≈ {int(rank)}")
 
@@ -215,7 +248,7 @@ with tab2:
 
         if st.button("Calculate Percentile"):
 
-            percentile = 100-(r/16000)
+            percentile = 100 - (r / 16000)
 
             st.success(f"Expected Percentile ≈ {round(percentile,3)}")
 
@@ -265,7 +298,7 @@ with tab3:
 
             safest_rank = max(r1,r2)
 
-            percentile = 100-(safest_rank/16000)
+            percentile = 100 - (safest_rank / 16000)
 
             results.append({
 
