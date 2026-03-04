@@ -65,18 +65,8 @@ if "user" not in st.session_state:
 
                             st.error("Please verify your email before login 📧")
 
-                    except Exception as e:
-
-                        error=str(e)
-
-                        if "INVALID_PASSWORD" in error:
-                            st.error("Wrong password")
-
-                        elif "EMAIL_NOT_FOUND" in error:
-                            st.error("Email not registered")
-
-                        else:
-                            st.warning("Connection retry — click login again")
+                    except:
+                        st.error("Login Failed")
 
     with signup_tab:
 
@@ -117,17 +107,13 @@ st.markdown("""
 ### 🚀 Smart Round-wise Prediction + AI Counsellor
 """)
 
-# ---------------- ANIMATED BUTTON STYLE ----------------
+# ---------------- STYLE ----------------
 st.markdown("""
 <style>
 .stRadio > div {
-    background: linear-gradient(90deg,#1f4fff,#00d4ff);
-    padding:10px;
-    border-radius:12px;
-}
-.stRadio label {
-    font-weight:600;
-    color:white;
+background: linear-gradient(90deg,#1f4fff,#00d4ff);
+padding:10px;
+border-radius:10px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -135,7 +121,7 @@ st.markdown("""
 # ---------------- MODE SELECT ----------------
 mode = st.radio(
     "Select Admission Mode",
-    ["Boards Percentage","JEE AIR 🚀"],
+    ["Boards Percentage","JEE AIR"],
     horizontal=True
 )
 
@@ -145,39 +131,46 @@ if mode == "Boards Percentage":
 else:
     df = pd.read_excel("jee_cutoff.xlsx")
 
-# ---------------- INPUT SECTION ----------------
-with st.container():
+# ---------------- INPUT ----------------
+st.markdown("## 🔍 Enter Your Details")
 
-    st.markdown("## 🔍 Enter Your Details")
+col1,col2,col3 = st.columns(3)
 
-    col1,col2,col3 = st.columns(3)
+with col1:
 
-    with col1:
+    if mode == "Boards Percentage":
+        score = st.number_input("🎯 Your Percentage",0.0,100.0)
+    else:
+        score = st.number_input("🎯 Your JEE AIR Rank",1,1000000)
 
-        if mode == "Boards Percentage":
-            score = st.number_input("🎯 Your Percentage",0.0,100.0)
+if mode == "Boards Percentage":
 
-        else:
-            score = st.number_input("🎯 Your JEE AIR Rank",1,1000000)
+    with col2:
+        category = st.selectbox("📂 Category",df["Category"].unique())
+
+    filtered_df = df[df["Category"]==category]
+
+else:
+
+    filtered_df = df
+
+with col3:
 
     if mode == "Boards Percentage":
 
-        with col2:
-            category = st.selectbox("📂 Category",df["Category"].unique())
-
-        filtered_df = df[df["Category"] == category]
-
-    else:
-
-        filtered_df = df
-
-    with col3:
         round_option = st.selectbox(
             "🗂 Select Round",
             ["ROUND 1 CUTOFF","ROUND 2 CUTOFF","ROUND 3 CUTOFF","SPOT"]
         )
 
-    inflation = st.slider("📈 Expected Inflation (%)",0.0,5.0,2.0)
+    else:
+
+        round_option = st.selectbox(
+            "🗂 Select Round",
+            ["ROUND 1","ROUND 2","ROUND 2 UPGRADATION 5","SPOT"]
+        )
+
+inflation = st.slider("📈 Expected Inflation (%)",0.0,5.0,2.0)
 
 # ---------------- PREDICTION ----------------
 if st.button("🚀 Predict Now"):
@@ -185,29 +178,11 @@ if st.button("🚀 Predict Now"):
     with st.spinner("Analyzing cutoffs..."):
         time.sleep(1)
 
-    filtered = filtered_df
-
     results=[]
 
-    for _,row in filtered.iterrows():
+    for _,row in filtered_df.iterrows():
 
-        if mode == "JEE AIR 🚀":
-    
-    if round_option == "ROUND 1 CUTOFF":
-        current = row["ROUND 1"]
-
-    elif round_option == "ROUND 2 CUTOFF":
-        current = row["ROUND 2"]
-
-    elif round_option == "ROUND 3 CUTOFF":
-        current = row["ROUND 2 UPGRADATION"]
-
-    else:
-        current = row["SPOT"]
-
-else:
-
-    current = row[round_option]
+        current=row[round_option]
 
         predicted=current+(current*inflation/100)
 
@@ -240,20 +215,6 @@ else:
 
     result_df=result_df.sort_values(by="Safest Score")
 
-    st.session_state["result_df"]=result_df
-
-    safe=len(result_df[result_df["Status"]=="🟢 Safe"])
-    borderline=len(result_df[result_df["Status"]=="🟡 Borderline"])
-    risky=len(result_df[result_df["Status"]=="🔴 Risky"])
-
-    st.markdown("## 📊 Summary")
-
-    a,b,c=st.columns(3)
-
-    a.metric("Safe",safe)
-    b.metric("Borderline",borderline)
-    c.metric("Risky",risky)
-
     st.markdown("## 📋 Results")
 
     st.dataframe(result_df,use_container_width=True)
@@ -261,4 +222,3 @@ else:
 # ---------------- FOOTER ----------------
 st.markdown("---")
 st.caption("Built with ❤️ by Anshul")
-
