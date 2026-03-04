@@ -42,31 +42,37 @@ if "user" not in st.session_state:
 
             if login_button:
 
-                if email == "" or password == "":
-                    st.warning("Enter email and password")
+                try:
 
-                else:
-                    try:
+                    # retry login once
+                    for i in range(2):
+                        try:
+                            user = auth.sign_in_with_email_and_password(email,password)
+                            break
+                        except:
+                            time.sleep(1)
 
-                        user = auth.sign_in_with_email_and_password(email,password)
+                    account_info = auth.get_account_info(user['idToken'])
+                    verified = account_info['users'][0]['emailVerified']
 
-                        time.sleep(0.4)
+                    if verified:
+                        st.session_state.user = user
+                        st.rerun()
+                    else:
+                        st.error("Please verify your email first")
 
-                        account_info = auth.get_account_info(user['idToken'])
+                except Exception as e:
 
-                        verified = account_info['users'][0]['emailVerified']
+                    error=str(e)
 
-                        if verified:
+                    if "INVALID_PASSWORD" in error:
+                        st.error("Wrong password")
 
-                            st.session_state.user = user
-                            st.rerun()
+                    elif "EMAIL_NOT_FOUND" in error:
+                        st.error("Email not registered")
 
-                        else:
-
-                            st.error("Please verify your email before login 📧")
-
-                    except:
-                        st.error("Login Failed")
+                    else:
+                        st.warning("Network retry — click login again")
 
     with signup_tab:
 
@@ -82,13 +88,11 @@ if "user" not in st.session_state:
                 try:
 
                     user = auth.create_user_with_email_and_password(new_email,new_password)
-
                     auth.send_email_verification(user['idToken'])
 
-                    st.success("Account created! Check your email to verify 📧")
+                    st.success("Account created! Verify your email")
 
                 except:
-
                     st.error("Signup Failed")
 
     st.stop()
@@ -104,7 +108,7 @@ with col2:
 # ---------------- HEADER ----------------
 st.markdown("""
 # 🎓 Jaypee Noida Cutoff Predictor  
-### 🚀 Smart Round-wise Prediction + AI Counsellor
+### 🚀 Smart Round-wise Prediction Tool
 """)
 
 # ---------------- STYLE ----------------
@@ -131,7 +135,7 @@ if mode == "Boards Percentage":
 else:
     df = pd.read_excel("jee_cutoff.xlsx")
 
-# ---------------- INPUT ----------------
+# ---------------- INPUT SECTION ----------------
 st.markdown("## 🔍 Enter Your Details")
 
 col1,col2,col3 = st.columns(3)
@@ -148,10 +152,9 @@ if mode == "Boards Percentage":
     with col2:
         category = st.selectbox("📂 Category",df["Category"].unique())
 
-    filtered_df = df[df["Category"]==category]
+    filtered_df = df[df["Category"] == category]
 
 else:
-
     filtered_df = df
 
 with col3:
@@ -218,6 +221,45 @@ if st.button("🚀 Predict Now"):
     st.markdown("## 📋 Results")
 
     st.dataframe(result_df,use_container_width=True)
+
+# ---------------- RANK ↔ PERCENTILE TOOL ----------------
+st.markdown("---")
+st.markdown("## 📊 Rank ↔ Percentile Calculator")
+
+colA,colB = st.columns(2)
+
+with colA:
+
+    st.markdown("### Percentile → Rank")
+
+    percentile = st.number_input(
+        "Enter Percentile",
+        min_value=0.0,
+        max_value=100.0,
+        step=0.01
+    )
+
+    if st.button("Calculate Rank"):
+
+        rank = (100 - percentile) * 16000
+
+        st.success(f"Expected Rank: {int(rank)}")
+
+with colB:
+
+    st.markdown("### Rank → Percentile")
+
+    rank_input = st.number_input(
+        "Enter Rank",
+        min_value=1,
+        max_value=2000000
+    )
+
+    if st.button("Calculate Percentile"):
+
+        percentile_calc = 100 - (rank_input / 16000)
+
+        st.success(f"Expected Percentile: {round(percentile_calc,3)}")
 
 # ---------------- FOOTER ----------------
 st.markdown("---")
