@@ -30,26 +30,39 @@ if "user" not in st.session_state:
 
     st.title("🔐 Login to Cutoff Predictor")
 
-    email = st.text_input("Email")
-    password = st.text_input("Password", type="password")
+    login_tab, signup_tab = st.tabs(["Login", "Signup"])
 
-    col1, col2 = st.columns(2)
+    with login_tab:
 
-    with col1:
+        email = st.text_input("Email", key="login_email")
+        password = st.text_input("Password", type="password", key="login_pass")
+
         if st.button("Login"):
-            try:
-                user = auth.sign_in_with_email_and_password(email, password)
-                st.session_state.user = user
-                st.success("Login Successful 🎉")
-                st.rerun()
-            except:
-                st.error("Invalid Email or Password")
 
-    with col2:
-        if st.button("Signup"):
+            if email == "" or password == "":
+                st.warning("Please enter email and password")
+
+            else:
+                try:
+                    user = auth.sign_in_with_email_and_password(email, password)
+                    st.session_state.user = user
+                    st.success("Login Successful 🎉")
+                    st.rerun()
+
+                except:
+                    st.error("Invalid Email or Password")
+
+    with signup_tab:
+
+        new_email = st.text_input("Email", key="signup_email")
+        new_password = st.text_input("Password", type="password", key="signup_pass")
+
+        if st.button("Create Account"):
+
             try:
-                auth.create_user_with_email_and_password(email, password)
-                st.success("Account Created Successfully")
+                auth.create_user_with_email_and_password(new_email, new_password)
+                st.success("Account Created Successfully 🎉")
+
             except:
                 st.error("Signup Failed")
 
@@ -263,3 +276,4 @@ if "result_df" in st.session_state:
 
 st.markdown("---")
 st.caption("Built with ❤️ by Anshul | AI Cutoff Prediction Engine")
+
