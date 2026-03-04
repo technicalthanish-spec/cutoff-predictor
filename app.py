@@ -5,7 +5,7 @@ import pyrebase
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
-    page_title="Cutoff Predictor Pro",
+    page_title="JAYPEE NOIDA Cutoff Predictor ",
     page_icon="🎓",
     layout="wide"
 )
@@ -306,3 +306,4 @@ if "result_df" in st.session_state:
 # ---------------- FOOTER ----------------
 st.markdown("---")
 st.caption("Built with ❤️ by Anshul | AI Cutoff Prediction Engine")
+
