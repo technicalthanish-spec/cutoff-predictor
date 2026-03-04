@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import time
 import pyrebase
+st.cache_data.clear()
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
@@ -32,24 +33,39 @@ if "user" not in st.session_state:
     login_tab, signup_tab = st.tabs(["Login", "Signup"])
 
     # -------- LOGIN --------
-    with login_tab:
+   with login_tab:
 
-        with st.form("login_form"):
+    with st.form("login_form"):
 
-            email = st.text_input("Email")
-            password = st.text_input("Password", type="password")
+        email = st.text_input("Email")
+        password = st.text_input("Password", type="password")
 
-            login_button = st.form_submit_button("Login")
+        login_button = st.form_submit_button("Login")
 
-            if login_button:
+        if login_button:
 
+            if email == "" or password == "":
+                st.warning("Enter email and password")
+
+            else:
                 try:
                     user = auth.sign_in_with_email_and_password(email, password)
-                    st.session_state.user = user
-                    st.rerun()
 
-                except:
-                    st.error("Invalid Email or Password")
+                    if user:
+                        st.session_state.user = user
+                        st.rerun()
+
+                except Exception as e:
+                    error_message = str(e)
+
+                    if "INVALID_PASSWORD" in error_message:
+                        st.error("Wrong password")
+
+                    elif "EMAIL_NOT_FOUND" in error_message:
+                        st.error("Email not registered")
+
+                    else:
+                        st.error("Login failed. Try again.")
 
     # -------- SIGNUP --------
     with signup_tab:
@@ -281,3 +297,4 @@ if "result_df" in st.session_state:
 # ---------------- FOOTER ----------------
 st.markdown("---")
 st.caption("Built with ❤️ by Anshul | AI Cutoff Prediction Engine")
+
