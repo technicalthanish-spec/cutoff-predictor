@@ -195,51 +195,58 @@ if page == "🧠 Branch Analyzer":
         horizontal=True
     )
 
+    results=[]
+
     if mode=="Boards":
 
         df=pd.read_excel("cutoff_data.xlsx")
 
-        round1="ROUND 1 CUTOFF"
-        round2="ROUND 2 CUTOFF"
+        for _,row in df.iterrows():
+
+            r1=row["ROUND 1 CUTOFF"]
+            r2=row["ROUND 2 CUTOFF"]
+
+            safest=max(r1,r2)
+
+            results.append({
+
+                "Branch":row["Branch Name"],
+                "Round 1 %":r1,
+                "Round 2 %":r2,
+                "Safest %":safest,
+                "Basis":"Round1 & Round2 percentage cutoffs"
+
+            })
 
     else:
 
         df=pd.read_excel("jee_cutoff.xlsx")
 
-        round1="ROUND 1"
-        round2="ROUND 2"
+        for _,row in df.iterrows():
 
-    results=[]
+            r1=row["ROUND 1"]
+            r2=row["ROUND 2"]
 
-    for _,row in df.iterrows():
+            safest_rank=max(r1,r2)
 
-        r1=row[round1]
-        r2=row[round2]
+            percentile=100-(safest_rank/16000)
 
-        safest_rank=max(r1,r2)
+            results.append({
 
-        safest_percentile=100-(safest_rank/16000)
+                "Branch":row["Branch Name"],
+                "Round 1 Rank":r1,
+                "Round 2 Rank":r2,
+                "Safest Rank":safest_rank,
+                "Safest Percentile":round(percentile,3),
+                "Basis":"Converted from JEE closing ranks"
 
-        results.append({
-
-            "Branch":row["Branch Name"],
-            "Round 1":r1,
-            "Round 2":r2,
-            "Safest Rank":safest_rank,
-            "Safest Percentile":round(safest_percentile,3),
-            "Basis":"Round1 & Round2 closing ranks"
-
-        })
+            })
 
     safety_df=pd.DataFrame(results)
-
-    safety_df=safety_df.sort_values(
-        by="Safest Percentile",
-        ascending=False
-    )
 
     st.dataframe(safety_df,use_container_width=True)
 
 # ---------------- FOOTER ----------------
 st.markdown("---")
 st.caption("Built with ❤️ by Anshul")
+
