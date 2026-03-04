@@ -49,8 +49,18 @@ if "user" not in st.session_state:
                 else:
                     try:
 
-                        user = auth.sign_in_with_email_and_password(email,password)
+account_info = auth.get_account_info(user['idToken'])
 
+verified = account_info['users'][0]['emailVerified']
+
+if verified:
+
+    st.session_state.user = user
+    st.rerun()
+
+else:
+
+    st.error("Please verify your email before login 📧")
                         if user:
                             st.session_state.user = user
                             st.rerun()
@@ -316,6 +326,7 @@ if "result_df" in st.session_state:
 # ---------------- FOOTER ----------------
 st.markdown("---")
 st.caption("Built with ❤️ by Anshul | AI Cutoff Prediction Engine")
+
 
 
 
