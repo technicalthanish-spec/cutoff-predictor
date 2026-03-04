@@ -99,11 +99,11 @@ with col2:
 
 # ---------------- HEADER ----------------
 st.markdown("""
-# 🎓 Cutoff Predictor Pro  
-### 🚀 Smart Round-wise Prediction + AI Counsellor Engine
+# 🎓 JAYPEE NOIDA Cutoff Predictor  
+### 🚀  Round-wise DATA + AI Counsellor
 """)
 
-st.success("Welcome to Cutoff Predictor 🎓")
+st.success("Welcome to JAYPEE NOIDA PAST CUTOFF TRENDS 🎓")
 
 # ---------------- LOAD DATA ----------------
 df = pd.read_excel("cutoff_data.xlsx")
@@ -306,4 +306,5 @@ if "result_df" in st.session_state:
 # ---------------- FOOTER ----------------
 st.markdown("---")
 st.caption("Built with ❤️ by Anshul | AI Cutoff Prediction Engine")
+
 
