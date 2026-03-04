@@ -3,7 +3,11 @@ import pandas as pd
 import time
 import pyrebase
 
-# ---------------- FIREBASE CONFIG ----------------
+# ---------------- FIREBASE LOGIN SYSTEM ----------------
+
+import pyrebase
+import streamlit as st
+
 firebaseConfig = {
     "apiKey": "AIzaSyA6enUAvvHTKj_A-525fXzBnXhgckiPO2c",
     "authDomain": "cutoff-predictor.firebaseapp.com",
@@ -17,14 +21,7 @@ firebaseConfig = {
 firebase = pyrebase.initialize_app(firebaseConfig)
 auth = firebase.auth()
 
-# ---------------- PAGE CONFIG ----------------
-st.set_page_config(
-    page_title="Cutoff Predictor Pro",
-    page_icon="🎓",
-    layout="wide"
-)
-
-# ---------------- LOGIN SYSTEM ----------------
+# ---------------- LOGIN CHECK ----------------
 
 if "user" not in st.session_state:
 
@@ -32,48 +29,53 @@ if "user" not in st.session_state:
 
     login_tab, signup_tab = st.tabs(["Login", "Signup"])
 
+    # ---------- LOGIN TAB ----------
     with login_tab:
 
-    with st.form("login_form"):
+        with st.form("login_form"):
 
-        email = st.text_input("Email")
-        password = st.text_input("Password", type="password")
+            email = st.text_input("Email")
+            password = st.text_input("Password", type="password")
 
-        login_button = st.form_submit_button("Login")
+            login_button = st.form_submit_button("Login")
 
-        if login_button:
+            if login_button:
 
-            try:
-                user = auth.sign_in_with_email_and_password(email, password)
-                st.session_state.user = user
-                st.success("Login Successful 🎉")
-                st.rerun()
+                try:
+                    user = auth.sign_in_with_email_and_password(email, password)
+                    st.session_state.user = user
+                    st.success("Login Successful 🎉")
+                    st.rerun()
 
-            except:
-                st.error("Invalid Email or Password")
-with signup_tab:
+                except:
+                    st.error("Invalid Email or Password")
 
-    with st.form("signup_form"):
+    # ---------- SIGNUP TAB ----------
+    with signup_tab:
 
-        new_email = st.text_input("Email")
-        new_password = st.text_input("Password", type="password")
+        with st.form("signup_form"):
 
-        signup_button = st.form_submit_button("Create Account")
+            new_email = st.text_input("Email")
+            new_password = st.text_input("Password", type="password")
 
-        if signup_button:
+            signup_button = st.form_submit_button("Create Account")
 
-            try:
-                auth.create_user_with_email_and_password(new_email, new_password)
-                st.success("Account Created Successfully 🎉")
+            if signup_button:
 
-            except:
-                st.error("Signup Failed")
+                try:
+                    auth.create_user_with_email_and_password(new_email, new_password)
+                    st.success("Account Created Successfully 🎉")
+
+                except:
+                    st.error("Signup Failed")
+
+    st.stop()
 
 # ---------------- LOGOUT BUTTON ----------------
 
-colx, coly = st.columns([8,1])
+col1, col2 = st.columns([9,1])
 
-with coly:
+with col2:
     if st.button("Logout"):
         del st.session_state.user
         st.rerun()
@@ -277,5 +279,6 @@ if "result_df" in st.session_state:
 
 st.markdown("---")
 st.caption("Built with ❤️ by Anshul | AI Cutoff Prediction Engine")
+
 
 
