@@ -1,115 +1,130 @@
 import streamlit as st
 import pandas as pd
-import time
 import pyrebase
+import time
+import plotly.express as px
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
-    page_title="Jaypee Noida Cutoff Predictor",
+    page_title="Jaypee Admission Predictor",
     page_icon="🎓",
     layout="wide"
 )
 
-# ---------------- FIREBASE CONFIG ----------------
+# ---------------- HERO UI ----------------
+st.markdown("""
+<style>
+.hero {
+background: linear-gradient(90deg,#0f2027,#203a43,#2c5364);
+padding:30px;
+border-radius:12px;
+text-align:center;
+color:white;
+margin-bottom:20px;
+}
+</style>
+
+<div class="hero">
+<h1>🎓 Jaypee Admission Predictor</h1>
+<p>Smart counselling tool for Boards & JEE candidates</p>
+</div>
+""", unsafe_allow_html=True)
+
+# ---------------- FIREBASE ----------------
 firebaseConfig = {
-    "apiKey": "AIzaSyA6enUAvvHTKj_A-525fXzBnXhgckiPO2c",
-    "authDomain": "cutoff-predictor.firebaseapp.com",
-    "projectId": "cutoff-predictor",
-    "storageBucket": "cutoff-predictor.firebasestorage.app",
-    "messagingSenderId": "694561033415",
-    "appId": "1:694561033415:web:0012224da667a1b7f542e2",
-    "databaseURL": ""
+"apiKey":"AIzaSyA6enUAvvHTKj_A-525fXzBnXhgckiPO2c",
+"authDomain":"cutoff-predictor.firebaseapp.com",
+"projectId":"cutoff-predictor",
+"storageBucket":"cutoff-predictor.firebasestorage.app",
+"messagingSenderId":"694561033415",
+"appId":"1:694561033415:web:0012224da667a1b7f542e2"
 }
 
-firebase = pyrebase.initialize_app(firebaseConfig)
-auth = firebase.auth()
+firebase=pyrebase.initialize_app(firebaseConfig)
+auth=firebase.auth()
 
 # ---------------- LOGIN ----------------
 if "user" not in st.session_state:
 
-    st.title("🔐 Login")
+    st.subheader("🔐 Login")
 
-    email = st.text_input("Email")
-    password = st.text_input("Password",type="password")
+    email=st.text_input("Email")
+    password=st.text_input("Password",type="password")
 
     if st.button("Login"):
 
         try:
+            user=auth.sign_in_with_email_and_password(email,password)
 
-            user = auth.sign_in_with_email_and_password(email,password)
-
-            account = auth.get_account_info(user['idToken'])
-            verified = account['users'][0]['emailVerified']
+            account=auth.get_account_info(user['idToken'])
+            verified=account['users'][0]['emailVerified']
 
             if verified:
-
                 st.session_state.user=user
                 st.rerun()
-
             else:
-                st.error("Verify email first")
+                st.error("Verify your email first")
 
         except:
             st.warning("Login failed — retry")
 
     st.stop()
 
-# ---------------- HEADER ----------------
-st.title("🎓 Jaypee Noida Cutoff Predictor")
-
 # ---------------- NAVIGATION ----------------
-page = st.radio(
-    "Navigation",
-    ["🎯 Predictor","📊 Rank ↔ Percentile","🧠 Branch Analyzer"],
-    horizontal=True
-)
+tab1,tab2,tab3=st.tabs([
+"🎯 Predictor",
+"📊 Rank Tools",
+"🧠 Branch Analyzer"
+])
 
 # =====================================================
-# 🎯 PREDICTOR
+# 🎯 PREDICTOR TAB
 # =====================================================
 
-if page == "🎯 Predictor":
+with tab1:
 
-    mode = st.radio(
+    st.subheader("Admission Predictor")
+
+    mode=st.radio(
         "Admission Mode",
         ["Boards Percentage","JEE AIR"],
         horizontal=True
     )
 
-    if mode == "Boards Percentage":
+    if mode=="Boards Percentage":
 
-        df = pd.read_excel("cutoff_data.xlsx")
+        df=pd.read_excel("cutoff_data.xlsx")
 
-        percentage = st.number_input("Your Percentage",0.0,100.0)
+        percentage=st.number_input("Your Percentage",0.0,100.0)
 
-        category = st.selectbox(
+        category=st.selectbox(
             "Category",
             df["Category"].unique()
         )
 
-        round_option = st.selectbox(
+        round_option=st.selectbox(
             "Round",
             ["ROUND 1 CUTOFF","ROUND 2 CUTOFF","ROUND 3 CUTOFF","SPOT"]
         )
 
-        inflation = st.slider("Inflation %",0.0,5.0,2.0)
+        inflation=st.slider("Expected Inflation %",0.0,5.0,2.0)
 
-        filtered = df[df["Category"]==category]
+        filtered=df[df["Category"]==category]
 
     else:
 
-        df = pd.read_excel("jee_cutoff.xlsx")
+        df=pd.read_excel("jee_cutoff.xlsx")
 
-        percentage = st.number_input("Your JEE Rank",1,1000000)
+        percentage=st.number_input("Your JEE Rank",1,1000000)
 
-        round_option = st.selectbox(
+        round_option=st.selectbox(
             "Round",
             ["ROUND 1","ROUND 2","ROUND 2 UPGRADATION 5","SPOT"]
         )
 
-        inflation = st.slider("Inflation %",0.0,5.0,2.0)
+        inflation=st.slider("Expected Inflation %",0.0,5.0,2.0)
 
-        filtered = df
+        filtered=df
 
     if st.button("Predict"):
 
@@ -139,7 +154,7 @@ if page == "🎯 Predictor":
 
             results.append({
                 "Branch":row["Branch Name"],
-                "Current":current,
+                "Current Cutoff":current,
                 "Predicted":round(predicted,2),
                 "Safest":round(safest,2),
                 "Status":status
@@ -147,15 +162,32 @@ if page == "🎯 Predictor":
 
         result_df=pd.DataFrame(results)
 
-        result_df=result_df.sort_values(by="Safest")
+        safe=len(result_df[result_df["Status"]=="🟢 Safe"])
+        borderline=len(result_df[result_df["Status"]=="🟡 Borderline"])
+        risky=len(result_df[result_df["Status"]=="🔴 Risky"])
+
+        col1,col2,col3=st.columns(3)
+
+        col1.metric("🟢 Safe",safe)
+        col2.metric("🟡 Borderline",borderline)
+        col3.metric("🔴 Risky",risky)
 
         st.dataframe(result_df,use_container_width=True)
 
+        fig=px.bar(
+            result_df,
+            x="Branch",
+            y="Current Cutoff",
+            title="Branch Cutoff Comparison"
+        )
+
+        st.plotly_chart(fig,use_container_width=True)
+
 # =====================================================
-# 📊 RANK ↔ PERCENTILE
+# 📊 RANK TOOL TAB
 # =====================================================
 
-if page == "📊 Rank ↔ Percentile":
+with tab2:
 
     col1,col2=st.columns(2)
 
@@ -184,12 +216,12 @@ if page == "📊 Rank ↔ Percentile":
             st.success(f"Expected Percentile ≈ {round(percentile,3)}")
 
 # =====================================================
-# 🧠 BRANCH ANALYZER
+# 🧠 BRANCH ANALYZER TAB
 # =====================================================
 
-if page == "🧠 Branch Analyzer":
+with tab3:
 
-    mode = st.radio(
+    mode=st.radio(
         "Analyze Using",
         ["Boards","JEE AIR"],
         horizontal=True
@@ -249,4 +281,3 @@ if page == "🧠 Branch Analyzer":
 # ---------------- FOOTER ----------------
 st.markdown("---")
 st.caption("Built with ❤️ by Anshul")
-
