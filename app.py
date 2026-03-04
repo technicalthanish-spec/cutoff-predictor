@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import pyrebase
-import time
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
@@ -10,7 +9,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# ---------------- HERO UI ----------------
+# ---------------- HERO ----------------
 st.markdown("""
 <style>
 .hero {
@@ -61,10 +60,8 @@ if "user" not in st.session_state:
             verified = account['users'][0]['emailVerified']
 
             if verified:
-
                 st.session_state.user = user
                 st.rerun()
-
             else:
                 st.error("Verify your email first")
 
@@ -98,7 +95,7 @@ with tab1:
 
         df = pd.read_excel("cutoff_data.xlsx")
 
-        percentage = st.number_input("Your Percentage",0.0,100.0)
+        score = st.number_input("Your Percentage",0.0,100.0)
 
         category = st.selectbox(
             "Category",
@@ -118,7 +115,7 @@ with tab1:
 
         df = pd.read_excel("jee_cutoff.xlsx")
 
-        percentage = st.number_input("Your JEE Rank",1,1000000)
+        score = st.number_input("Your JEE Rank",1,1000000)
 
         round_option = st.selectbox(
             "Round",
@@ -142,9 +139,13 @@ with tab1:
             safest = predicted + 3
 
             if mode == "Boards Percentage":
-                diff = percentage - current
+                diff = score - current
+                prob = (score/current)*100 if current>0 else 0
             else:
-                diff = current - percentage
+                diff = current - score
+                prob = (current/score)*100 if score>0 else 0
+
+            prob = max(0,min(prob,100))
 
             if diff >= 3:
                 status = "🟢 Safe"
@@ -160,6 +161,7 @@ with tab1:
                 "Current Cutoff":current,
                 "Predicted":round(predicted,2),
                 "Safest":round(safest,2),
+                "Chance %":round(prob,1),
                 "Status":status
             })
 
@@ -176,6 +178,14 @@ with tab1:
         col3.metric("🔴 Risky",risky)
 
         st.dataframe(result_df,use_container_width=True)
+
+        st.subheader("Admission Probability")
+
+        for _,row in result_df.iterrows():
+
+            st.write(f"**{row['Branch']}** — {row['Chance %']}% chance")
+
+            st.progress(int(row["Chance %"]))
 
 # =====================================================
 # 📊 RANK ↔ PERCENTILE
